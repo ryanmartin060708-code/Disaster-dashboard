@@ -1,0 +1,769 @@
+<html lang="en"><head></head><body class="min-h-screen p-margin-mobile md:p-margin-outer overflow-x-hidden text-on-surface transition-colors duration-300 relative z-0">
+<canvas class="fixed inset-0 pointer-events-none z-[-1] opacity-30" id="particle-canvas"></canvas>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>India Real-Time Disaster Dashboard</title>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" rel="stylesheet"/>
+<link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+                  "on-primary-fixed": "#001c39",
+                  "safe-green-muted": "#EAF3DE",
+                  "on-primary-fixed-variant": "#004883",
+                  "on-tertiary-fixed": "#191c1e",
+                  "secondary-container": "#5da9fe",
+                  "surface": "#fcf9f8",
+                  "critical-red-muted": "#FCEBEB",
+                  "secondary-fixed-dim": "#a1c9ff",
+                  "surface-bright": "#fcf9f8",
+                  "secondary": "#0060a8",
+                  "error": "#ba1a1a",
+                  "on-surface": "#1c1b1b",
+                  "surface-container-lowest": "#ffffff",
+                  "error-container": "#ffdad6",
+                  "secondary-fixed": "#d2e4ff",
+                  "on-background": "#1c1b1b",
+                  "surface-container-low": "#f6f3f2",
+                  "on-secondary-container": "#003d6d",
+                  "surface-variant": "#e5e2e1",
+                  "safe-green": "#3B6D11",
+                  "on-tertiary": "#ffffff",
+                  "on-secondary-fixed": "#001c38",
+                  "critical-red": "#E24B4A",
+                  "on-error-container": "#93000a",
+                  "surface-muted": "#F9FAFB",
+                  "on-error": "#ffffff",
+                  "inverse-on-surface": "#f3f0ef",
+                  "warning-amber-muted": "#FAEEDA",
+                  "on-tertiary-fixed-variant": "#444749",
+                  "primary-container": "#185fa5",
+                  "surface-container-highest": "#e5e2e1",
+                  "tertiary-container": "#5c5e60",
+                  "inverse-surface": "#313030",
+                  "tertiary-fixed": "#e1e2e4",
+                  "tertiary": "#444748",
+                  "surface-container-high": "#ebe7e7",
+                  "primary-fixed": "#d4e3ff",
+                  "on-secondary-fixed-variant": "#004880",
+                  "surface-container": "#f0edec",
+                  "primary": "#004782",
+                  "background": "#fcf9f8",
+                  "surface-tint": "#1960a6",
+                  "surface-dim": "#dcd9d9",
+                  "warning-amber": "#BA7517",
+                  "border-subtle": "#E2E4E8",
+                  "inverse-primary": "#a4c9ff",
+                  "on-primary": "#ffffff",
+                  "on-tertiary-container": "#d6d8da",
+                  "outline": "#727782",
+                  "info-blue-muted": "#E6F1FB",
+                  "tertiary-fixed-dim": "#c5c6c8",
+                  "primary-fixed-dim": "#a4c9ff",
+                  "outline-variant": "#c2c6d2",
+                  "on-surface-variant": "#424751",
+                  "on-secondary": "#ffffff",
+                  "on-primary-container": "#c1d9ff"
+          },
+          borderRadius: {
+                  "DEFAULT": "0.25rem",
+                  "lg": "0.5rem",
+                  "xl": "0.75rem",
+                  "full": "9999px"
+          },
+          spacing: {
+                  "padding-metric": "0.9rem 1rem",
+                  "padding-card": "1rem 1.25rem",
+                  "margin-outer": "1.5rem",
+                  "margin-mobile": "0.75rem",
+                  "gap-component": "0.625rem",
+                  "container-max": "1100px",
+                  "gap-layout": "1rem"
+          },
+          fontFamily: {
+                  "weather-value": ["Inter", "sans-serif"],
+                  "body-main": ["Inter", "sans-serif"],
+                  "metric-value-mobile": ["Inter", "sans-serif"],
+                  "metric-value": ["Inter", "sans-serif"],
+                  "label-caps": ["Inter", "sans-serif"],
+                  "metadata": ["Inter", "sans-serif"],
+                  "map-label": ["Inter", "sans-serif"],
+                  "headline-sm": ["Inter", "sans-serif"]
+          },
+          fontSize: {
+                  "weather-value": ["20px", { "lineHeight": "24px", "fontWeight": "600" }],
+                  "body-main": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+                  "metric-value-mobile": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+                  "metric-value": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                  "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.07em", "fontWeight": "600" }],
+                  "metadata": ["11px", { "lineHeight": "14px", "fontWeight": "400" }],
+                  "map-label": ["14px", { "lineHeight": "20px", "fontWeight": "600" }],
+                  "headline-sm": ["16px", { "lineHeight": "24px", "fontWeight": "600" }]
+          },
+          animation: {
+            'pulse-fast': 'pulseFluid 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'spin-slow': 'spin 1s linear infinite',
+            'float': 'float 3s ease-in-out infinite'
+          },
+          keyframes: {
+            fadeInUp: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            },
+            pulseFluid: {
+              '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+              '50%': { opacity: '0.5', transform: 'scale(1.1)' }
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-3px)' }
+            }
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      background-color: theme('colors.background');
+      font-family: theme('fontFamily.body-main');
+      color: theme('colors.on-background');
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    
+    .glass-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid theme('colors.border-subtle');
+      border-radius: theme('borderRadius.xl');
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+    }
+    
+    .glass-card:hover {
+      transform: translateY(-4px) scale(1.01);
+      box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    }
+
+    .stagger-1 { animation-delay: 0.1s; opacity: 0; }
+    .stagger-2 { animation-delay: 0.2s; opacity: 0; }
+    .stagger-3 { animation-delay: 0.3s; opacity: 0; }
+    .stagger-4 { animation-delay: 0.4s; opacity: 0; }
+    .stagger-5 { animation-delay: 0.5s; opacity: 0; }
+
+    .map-container .leaflet-container {
+      font-family: theme('fontFamily.body-main');
+    }
+    
+    .progress-bar-fill {
+      transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .hover-row {
+      transition: background-color 0.2s ease;
+    }
+    .hover-row:hover {
+      background-color: rgba(0, 0, 0, 0.03);
+    }
+    html.dark .hover-row:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Dark Mode Overrides */
+    html.dark body { background-color: #101419; color: #e0e2e9; }
+    html.dark .glass-card { background: rgba(24, 28, 33, 0.85) !important; border-color: #404751 !important; }
+    html.dark .bg-surface-muted { background-color: #1c2025 !important; }
+    html.dark .hover\:bg-surface-variant:hover { background-color: #31353a !important; }
+    html.dark .bg-surface-variant { background-color: #31353a !important; }
+    html.dark .text-on-surface { color: #e0e2e9 !important; }
+    html.dark .text-on-surface-variant { color: #c0c7d3 !important; }
+    html.dark .text-outline { color: #8a919c !important; }
+    html.dark .border-border-subtle { border-color: #404751 !important; }
+    html.dark .map-container { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
+    html.dark .custom-popup .leaflet-popup-content-wrapper,
+    html.dark .custom-popup .leaflet-popup-tip { background-color: #181c21 !important; color: #e0e2e9 !important; border-color: #404751 !important; }
+    html.dark .leaflet-control-attribution, 
+    html.dark .leaflet-control-zoom a { background-color: #181c21 !important; color: #e0e2e9 !important; border-color: #404751 !important; }
+  </style>
+<div class="max-w-container-max mx-auto flex flex-col gap-gap-layout">
+<!-- Topbar -->
+<div class="glass-card flex items-center justify-between p-4 animate-fade-in-up">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-info-blue-muted flex items-center justify-center flex-shrink-0 text-primary-container text-xl transition-transform hover:scale-110 duration-300">
+<i class="ti ti-shield-exclamation"></i>
+</div>
+<div>
+<h1 class="text-headline-sm text-on-surface">India Disaster Response Dashboard</h1>
+<p class="text-metadata text-on-surface-variant">National Emergency Management Authority · NDMA</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="text-metadata text-on-surface-variant font-medium hidden sm:block" id="clock"></div>
+<div class="bg-safe-green-muted text-safe-green text-metadata font-semibold px-3 py-1 rounded-full flex items-center gap-2 transition-all duration-300 hover:shadow-md">
+<div class="w-2 h-2 rounded-full bg-safe-green animate-pulse-fast shadow-[0_0_8px_rgba(59,109,17,0.6)]"></div>
+        Live
+      </div>
+<button aria-label="Toggle Dark Mode" class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-on-surface transition-all duration-300 hover:bg-surface-dim hover:scale-110 ml-2" id="theme-toggle">
+<i class="ti ti-moon transition-transform duration-300" id="theme-icon"></i>
+</button>
+</div>
+</div>
+<!-- Metric cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gap-layout">
+<div class="glass-card p-padding-metric animate-fade-in-up stagger-1 cursor-default">
+<div class="text-metadata text-on-surface-variant mb-1.5 flex items-center gap-1.5">
+<i class="ti ti-alert-triangle text-critical-red text-base animate-pulse-fast"></i> Active alerts
+      </div>
+<div class="text-metric-value text-critical-red">4</div>
+<div class="text-[11px] text-outline mt-1 font-medium">↑ 2 since 6 AM</div>
+</div>
+<div class="glass-card p-padding-metric animate-fade-in-up stagger-2 cursor-default">
+<div class="text-metadata text-on-surface-variant mb-1.5 flex items-center gap-1.5">
+<i class="ti ti-cloud-rain text-primary-container text-base animate-float"></i> Flood warnings
+      </div>
+<div class="text-metric-value text-primary-container">2</div>
+<div class="text-[11px] text-outline mt-1 font-medium">Assam, Kerala</div>
+</div>
+<div class="glass-card p-padding-metric animate-fade-in-up stagger-3 cursor-default">
+<div class="text-metadata text-on-surface-variant mb-1.5 flex items-center gap-1.5">
+<i class="ti ti-temperature text-warning-amber text-base"></i> Heatwave zones
+      </div>
+<div class="text-metric-value text-warning-amber">3</div>
+<div class="text-[11px] text-outline mt-1 font-medium">Rajasthan, UP, MP</div>
+</div>
+<div class="glass-card p-padding-metric animate-fade-in-up stagger-4 cursor-default">
+<div class="text-metadata text-on-surface-variant mb-1.5 flex items-center gap-1.5">
+<i class="ti ti-users text-safe-green text-base"></i> Relief camps
+      </div>
+<div class="text-metric-value text-safe-green">18</div>
+<div class="text-[11px] text-outline mt-1 font-medium">12,400 persons</div>
+</div>
+</div>
+<!-- Row 1: Alerts + Weather -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gap-layout">
+<div class="glass-card p-padding-card animate-fade-in-up stagger-2 flex flex-col">
+<div class="text-label-caps text-on-surface-variant mb-4 flex items-center gap-1.5 uppercase tracking-wider">
+<i class="ti ti-bell text-sm"></i> Flood &amp; disaster alerts
+      </div>
+<div class="flex-1 flex flex-col gap-0">
+<div class="flex items-start gap-3 py-2.5 border-b border-border-subtle last:border-0 last:pb-0 hover-row px-2 -mx-2 rounded">
+<div class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0 bg-critical-red animate-pulse-fast shadow-[0_0_8px_rgba(226,75,74,0.6)]"></div>
+<div>
+<div class="flex items-center flex-wrap gap-2 mb-1">
+<span class="text-body-main font-medium">Brahmaputra river — critical level</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-critical-red-muted text-critical-red">Red</span>
+</div>
+<div class="text-metadata text-outline">Assam · Updated 12 min ago</div>
+</div>
+</div>
+<div class="flex items-start gap-3 py-2.5 border-b border-border-subtle last:border-0 last:pb-0 hover-row px-2 -mx-2 rounded">
+<div class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0 bg-critical-red animate-pulse-fast shadow-[0_0_8px_rgba(226,75,74,0.6)]"></div>
+<div>
+<div class="flex items-center flex-wrap gap-2 mb-1">
+<span class="text-body-main font-medium">Cyclone Biparjoy landfall expected</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-critical-red-muted text-critical-red">Red</span>
+</div>
+<div class="text-metadata text-outline">Gujarat coast · 18:00 IST tonight</div>
+</div>
+</div>
+<div class="flex items-start gap-3 py-2.5 border-b border-border-subtle last:border-0 last:pb-0 hover-row px-2 -mx-2 rounded">
+<div class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0 bg-warning-amber"></div>
+<div>
+<div class="flex items-center flex-wrap gap-2 mb-1">
+<span class="text-body-main font-medium">Heavy rainfall — Periyar basin</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-warning-amber-muted text-warning-amber">Orange</span>
+</div>
+<div class="text-metadata text-outline">Kerala · IMD warning issued</div>
+</div>
+</div>
+<div class="flex items-start gap-3 py-2.5 border-b border-border-subtle last:border-0 last:pb-0 hover-row px-2 -mx-2 rounded">
+<div class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0 bg-secondary-container"></div>
+<div>
+<div class="flex items-center flex-wrap gap-2 mb-1">
+<span class="text-body-main font-medium">Landslide watch — Manali–Leh highway</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-info-blue-muted text-primary-container">Watch</span>
+</div>
+<div class="text-metadata text-outline">Himachal Pradesh · BRO on standby</div>
+</div>
+</div>
+<div class="flex items-start gap-3 py-2.5 border-b border-border-subtle last:border-0 last:pb-0 hover-row px-2 -mx-2 rounded">
+<div class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0 bg-safe-green"></div>
+<div>
+<div class="flex items-center flex-wrap gap-2 mb-1">
+<span class="text-body-main font-medium">Odisha coast — all-clear issued</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-safe-green-muted text-safe-green">Clear</span>
+</div>
+<div class="text-metadata text-outline">Odisha · Previous cyclone watch lifted</div>
+</div>
+</div>
+</div>
+</div>
+<div class="glass-card p-padding-card animate-fade-in-up stagger-3 flex flex-col">
+<div class="text-label-caps text-on-surface-variant mb-4 flex items-center gap-1.5 uppercase tracking-wider" id="weather-card-title">
+<i class="ti ti-cloud text-sm animate-float"></i> Weather data · Mumbai
+      </div>
+<div class="grid grid-cols-2 gap-2 mb-3">
+<div class="bg-surface-muted rounded-lg p-3 transition-colors hover:bg-surface-variant cursor-default">
+<div class="text-metadata text-on-surface-variant mb-1 flex items-center gap-1">
+<i class="ti ti-temperature text-sm animate-float"></i> Temperature
+          </div>
+<div class="text-weather-value text-on-surface" id="w-temp">34°C</div>
+</div>
+<div class="bg-surface-muted rounded-lg p-3 transition-colors hover:bg-surface-variant cursor-default">
+<div class="text-metadata text-on-surface-variant mb-1 flex items-center gap-1">
+<i class="ti ti-droplet text-sm animate-float"></i> Humidity
+          </div>
+<div class="text-weather-value text-on-surface" id="w-hum">78%</div>
+</div>
+<div class="bg-surface-muted rounded-lg p-3 transition-colors hover:bg-surface-variant cursor-default">
+<div class="text-metadata text-on-surface-variant mb-1 flex items-center gap-1">
+<i class="ti ti-wind text-sm animate-float"></i> Wind speed
+          </div>
+<div class="text-weather-value text-on-surface" id="w-wind">22 km/h</div>
+</div>
+<div class="bg-surface-muted rounded-lg p-3 transition-colors hover:bg-surface-variant cursor-default">
+<div class="text-metadata text-on-surface-variant mb-1 flex items-center gap-1">
+<i class="ti ti-cloud-rain text-sm animate-float"></i> Rainfall today
+          </div>
+<div class="text-weather-value text-on-surface" id="w-rain">14 mm</div>
+</div>
+<div class="bg-surface-muted rounded-lg p-3 transition-colors hover:bg-surface-variant cursor-default">
+<div class="text-metadata text-on-surface-variant mb-1 flex items-center gap-1">
+<i class="ti ti-eye text-sm animate-float"></i> Visibility
+          </div>
+<div class="text-weather-value text-on-surface" id="w-vis">5 km</div>
+</div>
+<div class="bg-surface-muted rounded-lg p-3 transition-colors hover:bg-surface-variant cursor-default">
+<div class="text-metadata text-on-surface-variant mb-1 flex items-center gap-1">
+<i class="ti ti-gauge text-sm animate-float"></i> Pressure
+          </div>
+<div class="text-weather-value text-on-surface" id="w-pres">1008 hPa</div>
+</div>
+</div>
+<div class="mt-auto bg-warning-amber-muted text-warning-amber text-[12px] font-medium p-2.5 rounded-lg flex items-center gap-2" id="weather-banner">
+<i class="ti ti-loader animate-spin-slow text-base"></i>
+        Fetching live weather data...
+      </div>
+</div>
+</div>
+<!-- Row 2: Traffic + Map -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gap-layout">
+<div class="glass-card p-padding-card animate-fade-in-up stagger-4 flex flex-col">
+<div class="text-label-caps text-on-surface-variant mb-4 flex items-center gap-1.5 uppercase tracking-wider">
+<i class="ti ti-car text-sm"></i> Traffic &amp; road conditions
+      </div>
+<div class="flex flex-col gap-0 flex-1 justify-center">
+<div class="flex items-center gap-3 py-2.5 border-b border-border-subtle last:border-0 hover-row px-2 -mx-2 rounded">
+<span class="text-[12px] font-medium text-on-surface w-32 flex-shrink-0 truncate">NH-48 Delhi–Jaipur</span>
+<div class="flex-1 h-1.5 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full rounded-full bg-critical-red progress-bar-fill" data-width="82%" style="width:0%;"></div>
+</div>
+<span class="text-[12px] text-outline w-8 text-right">82%</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-critical-red-muted text-critical-red w-16 text-center">Heavy</span>
+</div>
+<div class="flex items-center gap-3 py-2.5 border-b border-border-subtle last:border-0 hover-row px-2 -mx-2 rounded">
+<span class="text-[12px] font-medium text-on-surface w-32 flex-shrink-0 truncate">Mumbai–Pune Exp.</span>
+<div class="flex-1 h-1.5 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full rounded-full bg-warning-amber progress-bar-fill" data-width="67%" style="width:0%;"></div>
+</div>
+<span class="text-[12px] text-outline w-8 text-right">67%</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-warning-amber-muted text-warning-amber w-16 text-center">Moderate</span>
+</div>
+<div class="flex items-center gap-3 py-2.5 border-b border-border-subtle last:border-0 hover-row px-2 -mx-2 rounded">
+<span class="text-[12px] font-medium text-on-surface w-32 flex-shrink-0 truncate">NH-16 Bhubaneswar</span>
+<div class="flex-1 h-1.5 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full rounded-full bg-critical-red progress-bar-fill" data-width="91%" style="width:0%;"></div>
+</div>
+<span class="text-[12px] text-outline w-8 text-right">91%</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-critical-red-muted text-critical-red w-16 text-center">Blocked</span>
+</div>
+<div class="flex items-center gap-3 py-2.5 border-b border-border-subtle last:border-0 hover-row px-2 -mx-2 rounded">
+<span class="text-[12px] font-medium text-on-surface w-32 flex-shrink-0 truncate">Bengaluru Ring Rd</span>
+<div class="flex-1 h-1.5 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full rounded-full bg-safe-green progress-bar-fill" data-width="44%" style="width:0%;"></div>
+</div>
+<span class="text-[12px] text-outline w-8 text-right">44%</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-safe-green-muted text-safe-green w-16 text-center">Clear</span>
+</div>
+<div class="flex items-center gap-3 py-2.5 border-b border-border-subtle last:border-0 hover-row px-2 -mx-2 rounded">
+<span class="text-[12px] font-medium text-on-surface w-32 flex-shrink-0 truncate">Guwahati NH-27</span>
+<div class="flex-1 h-1.5 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full rounded-full bg-critical-red progress-bar-fill" data-width="100%" style="width:0%;"></div>
+</div>
+<span class="text-[12px] text-outline w-8 text-right">100%</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-critical-red-muted text-critical-red w-16 text-center">Closed</span>
+</div>
+</div>
+</div>
+<div class="glass-card p-padding-card animate-fade-in-up stagger-5 flex flex-col">
+<div class="text-label-caps text-on-surface-variant mb-4 flex items-center gap-1.5 uppercase tracking-wider">
+<i class="ti ti-map-pin text-sm"></i> Live map · flood zones
+      </div>
+<div class="h-[260px] rounded-lg z-0 w-full mb-4 shadow-inner border border-border-subtle map-container" id="map"></div>
+<div class="flex flex-col gap-0">
+<div class="flex items-center justify-between py-2 border-b border-border-subtle last:border-0 text-body-main hover-row px-2 -mx-2 rounded">
+<span class="text-on-surface font-medium truncate pr-2">Assam flood inundation zone</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-critical-red-muted text-critical-red flex-shrink-0">Critical</span>
+</div>
+<div class="flex items-center justify-between py-2 border-b border-border-subtle last:border-0 text-body-main hover-row px-2 -mx-2 rounded">
+<span class="text-on-surface font-medium truncate pr-2">Gujarat coastal evacuation belt</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-critical-red-muted text-critical-red flex-shrink-0">Evacuate</span>
+</div>
+<div class="flex items-center justify-between py-2 border-b border-border-subtle last:border-0 text-body-main hover-row px-2 -mx-2 rounded">
+<span class="text-on-surface font-medium truncate pr-2">Kerala high-rainfall corridor</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-warning-amber-muted text-warning-amber flex-shrink-0">Watch</span>
+</div>
+<div class="flex items-center justify-between py-2 border-b border-border-subtle last:border-0 text-body-main hover-row px-2 -mx-2 rounded">
+<span class="text-on-surface font-medium truncate pr-2">Himachal landslide buffer zone</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-info-blue-muted text-primary-container flex-shrink-0">Monitor</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Row 3: Contacts + Relief camps -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gap-layout pb-4">
+<div class="glass-card p-padding-card animate-fade-in-up stagger-4 flex flex-col">
+<div class="text-label-caps text-on-surface-variant mb-4 flex items-center gap-1.5 uppercase tracking-wider">
+<i class="ti ti-phone-call text-sm"></i> Emergency contacts
+      </div>
+<div class="flex flex-col gap-0 flex-1">
+<div class="flex items-center gap-3 py-2 border-b border-border-subtle last:border-0 transition-colors hover:bg-surface-muted rounded px-2 -mx-2 cursor-pointer">
+<div class="w-9 h-9 rounded-full bg-critical-red-muted flex items-center justify-center flex-shrink-0 transition-transform duration-300 hover:scale-110">
+<i class="ti ti-ambulance text-critical-red text-lg"></i>
+</div>
+<div class="flex-1 min-w-0">
+<div class="text-body-main font-semibold text-on-surface truncate">NDRF Helpline</div>
+<div class="text-[12px] text-primary-container font-medium transition-colors hover:text-secondary">011-24363260</div>
+</div>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-critical-red-muted text-critical-red flex-shrink-0">24/7</span>
+</div>
+<div class="flex items-center gap-3 py-2 border-b border-border-subtle last:border-0 transition-colors hover:bg-surface-muted rounded px-2 -mx-2 cursor-pointer">
+<div class="w-9 h-9 rounded-full bg-info-blue-muted flex items-center justify-center flex-shrink-0 transition-transform duration-300 hover:scale-110">
+<i class="ti ti-building-hospital text-primary-container text-lg"></i>
+</div>
+<div class="flex-1 min-w-0">
+<div class="text-body-main font-semibold text-on-surface truncate">National Emergency</div>
+<div class="text-[12px] text-primary-container font-medium transition-colors hover:text-secondary">112</div>
+</div>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-info-blue-muted text-primary-container flex-shrink-0">24/7</span>
+</div>
+<div class="flex items-center gap-3 py-2 border-b border-border-subtle last:border-0 transition-colors hover:bg-surface-muted rounded px-2 -mx-2 cursor-pointer">
+<div class="w-9 h-9 rounded-full bg-safe-green-muted flex items-center justify-center flex-shrink-0 transition-transform duration-300 hover:scale-110">
+<i class="ti ti-first-aid-kit text-safe-green text-lg"></i>
+</div>
+<div class="flex-1 min-w-0">
+<div class="text-body-main font-semibold text-on-surface truncate">Disaster Mgmt. Control</div>
+<div class="text-[12px] text-primary-container font-medium transition-colors hover:text-secondary">1078</div>
+</div>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-safe-green-muted text-safe-green flex-shrink-0">Active</span>
+</div>
+<div class="flex items-center gap-3 py-2 border-b border-border-subtle last:border-0 transition-colors hover:bg-surface-muted rounded px-2 -mx-2 cursor-pointer">
+<div class="w-9 h-9 rounded-full bg-warning-amber-muted flex items-center justify-center flex-shrink-0 transition-transform duration-300 hover:scale-110">
+<i class="ti ti-wave-sine text-warning-amber text-lg"></i>
+</div>
+<div class="flex-1 min-w-0">
+<div class="text-body-main font-semibold text-on-surface truncate">Flood Relief Helpline</div>
+<div class="text-[12px] text-primary-container font-medium transition-colors hover:text-secondary">1800-180-5999</div>
+</div>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-warning-amber-muted text-warning-amber flex-shrink-0">Toll-free</span>
+</div>
+<div class="flex items-center gap-3 py-2 border-b border-border-subtle last:border-0 transition-colors hover:bg-surface-muted rounded px-2 -mx-2 cursor-pointer">
+<div class="w-9 h-9 rounded-full bg-critical-red-muted flex items-center justify-center flex-shrink-0 transition-transform duration-300 hover:scale-110">
+<i class="ti ti-flame text-critical-red text-lg"></i>
+</div>
+<div class="flex-1 min-w-0">
+<div class="text-body-main font-semibold text-on-surface truncate">Fire &amp; Rescue</div>
+<div class="text-[12px] text-primary-container font-medium transition-colors hover:text-secondary">101</div>
+</div>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-critical-red-muted text-critical-red flex-shrink-0">24/7</span>
+</div>
+</div>
+</div>
+<div class="glass-card p-padding-card animate-fade-in-up stagger-5 flex flex-col">
+<div class="text-label-caps text-on-surface-variant mb-4 flex items-center gap-1.5 uppercase tracking-wider">
+<i class="ti ti-building-community text-sm"></i> Relief camp status
+      </div>
+<div class="flex flex-col gap-0 flex-1">
+<div class="flex items-center py-2.5 border-b border-border-subtle last:border-0 hover-row px-2 -mx-2 rounded">
+<span class="text-body-main font-medium text-on-surface flex-1 truncate pr-2">Guwahati Camp A · Assam</span>
+<span class="text-[11px] text-outline mr-3">3,200 persons</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-warning-amber-muted text-warning-amber w-20 text-center flex-shrink-0">Near full</span>
+</div>
+<div class="flex items-center py-2.5 border-b border-border-subtle last:border-0 hover-row px-2 -mx-2 rounded">
+<span class="text-body-main font-medium text-on-surface flex-1 truncate pr-2">Ernakulam Relief · Kerala</span>
+<span class="text-[11px] text-outline mr-3">1,800 persons</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-safe-green-muted text-safe-green w-20 text-center flex-shrink-0">Open</span>
+</div>
+<div class="flex items-center py-2.5 border-b border-border-subtle last:border-0 hover-row px-2 -mx-2 rounded">
+<span class="text-body-main font-medium text-on-surface flex-1 truncate pr-2">Bhuj Cyclone Shelter · Gujarat</span>
+<span class="text-[11px] text-outline mr-3">4,100 persons</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-critical-red-muted text-critical-red w-20 text-center flex-shrink-0">Full</span>
+</div>
+<div class="flex items-center py-2.5 border-b border-border-subtle last:border-0 hover-row px-2 -mx-2 rounded">
+<span class="text-body-main font-medium text-on-surface flex-1 truncate pr-2">Puri Relief Centre · Odisha</span>
+<span class="text-[11px] text-outline mr-3">900 persons</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-safe-green-muted text-safe-green w-20 text-center flex-shrink-0">Open</span>
+</div>
+<div class="flex items-center py-2.5 border-b border-border-subtle last:border-0 hover-row px-2 -mx-2 rounded">
+<span class="text-body-main font-medium text-on-surface flex-1 truncate pr-2">Kullu Camp · Himachal</span>
+<span class="text-[11px] text-outline mr-3">2,400 persons</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-warning-amber-muted text-warning-amber w-20 text-center flex-shrink-0">Near full</span>
+</div>
+</div>
+<div class="mt-4 p-3 bg-surface-muted border border-border-subtle rounded-lg flex items-center justify-between shadow-sm transition-colors hover:bg-surface-variant cursor-default">
+<span class="text-[12px] font-medium text-on-surface-variant">Total persons sheltered</span>
+<span class="text-headline-sm text-on-surface">12,400</span>
+</div>
+</div>
+</div>
+<!-- Footer -->
+<div class="glass-card p-3 flex flex-col sm:flex-row items-center justify-between gap-3 animate-fade-in-up stagger-5 mb-4">
+<div class="text-[12px] text-outline font-medium flex items-center gap-1.5">
+<i class="ti ti-database"></i> Integrated data sources:
+    </div>
+<div class="flex items-center gap-2 flex-wrap justify-center">
+<div class="text-[11px] px-3 py-1 rounded-full bg-safe-green-muted border border-[#C0DD97] text-safe-green flex items-center gap-1.5 font-medium shadow-sm transition-all duration-300 hover:scale-105 hover:shadow-md cursor-default">
+<i class="ti ti-cloud text-sm"></i> OpenWeather · Active
+      </div>
+<div class="text-[11px] px-3 py-1 rounded-full bg-safe-green-muted border border-[#C0DD97] text-safe-green flex items-center gap-1.5 font-medium shadow-sm transition-all duration-300 hover:scale-105 hover:shadow-md cursor-default">
+<i class="ti ti-map text-sm"></i> Leaflet · Active
+      </div>
+</div>
+</div>
+</div>
+<!-- Particle Background Script -->
+<script>
+  const canvas = document.getElementById('particle-canvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  class Particle {
+    constructor() {
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height;
+      this.size = Math.random() * 2 + 1;
+      this.speedY = Math.random() * -0.5 - 0.1;
+      this.speedX = Math.random() * 0.4 - 0.2;
+      this.alpha = Math.random() * 0.5 + 0.1;
+    }
+    update() {
+      this.y += this.speedY;
+      this.x += this.speedX;
+      if (this.y < 0) {
+        this.y = canvas.height;
+        this.x = Math.random() * canvas.width;
+      }
+    }
+    draw() {
+      const isDark = document.documentElement.classList.contains('dark');
+      ctx.fillStyle = isDark ? `rgba(157, 202, 255, ${this.alpha})` : `rgba(0, 71, 130, ${this.alpha})`;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function initParticles() {
+    particles = [];
+    for (let i = 0; i < 50; i++) {
+      particles.push(new Particle());
+    }
+  }
+
+  function animateParticles() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < particles.length; i++) {
+      particles[i].update();
+      particles[i].draw();
+    }
+    requestAnimationFrame(animateParticles);
+  }
+
+  initParticles();
+  animateParticles();
+
+  // Progress Bar Animation
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const bars = document.querySelectorAll('.progress-bar-fill');
+      bars.forEach(bar => {
+        bar.style.width = bar.getAttribute('data-width');
+      });
+    }, 500); // slight delay to ensure they animate after fade-in
+  });
+</script>
+<!-- Live IST clock & Dark Mode Toggle -->
+<script>
+  function tick() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      now.toLocaleTimeString('en-IN', {
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        timeZone: 'Asia/Kolkata'
+      }) + ' IST';
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  // Dark Mode Toggle Logic
+  const themeToggleBtn = document.getElementById('theme-toggle');
+  const themeIcon = document.getElementById('theme-icon');
+  
+  themeToggleBtn.addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark');
+    if (document.documentElement.classList.contains('dark')) {
+      themeIcon.classList.remove('ti-moon');
+      themeIcon.classList.add('ti-sun');
+    } else {
+      themeIcon.classList.remove('ti-sun');
+      themeIcon.classList.add('ti-moon');
+    }
+  });
+</script>
+<script>
+  const OW_KEY = '1bd4925eeceb4385c9b3f06d5403fed0';
+  const CITY   = 'Mumbai';
+
+  async function fetchWeather() {
+    try {
+      const res  = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=${CITY}&appid=${OW_KEY}&units=metric`
+      );
+      const data = await res.json();
+
+      if (data.cod !== 200) {
+        console.error('OpenWeather error:', data.message);
+        return;
+      }
+
+      document.getElementById('w-temp').textContent  = Math.round(data.main.temp) + '°C';
+      document.getElementById('w-hum').textContent   = data.main.humidity + '%';
+      document.getElementById('w-wind').textContent  = Math.round(data.wind.speed * 3.6) + ' km/h';
+      document.getElementById('w-pres').textContent  = data.main.pressure + ' hPa';
+      document.getElementById('w-vis').textContent   = (data.visibility / 1000).toFixed(1) + ' km';
+      document.getElementById('w-rain').textContent  = data.rain ? (data.rain['1h'] || 0) + ' mm' : '0 mm';
+
+      // Update card title to show city + live tag
+      document.getElementById('weather-card-title').innerHTML =
+        '<i class="ti ti-cloud text-sm animate-float"></i> Live weather · ' + data.name;
+
+      // Remove the "add API key" banner once data loads
+      const banner = document.getElementById('weather-banner');
+      if (banner) banner.remove();
+
+    } catch (err) {
+      console.error('Weather fetch failed:', err);
+    }
+  }
+
+  fetchWeather();
+  setInterval(fetchWeather, 5 * 60 * 1000);
+</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // Delay map initialization slightly to ensure container is fully rendered for sizing
+  setTimeout(() => {
+    const indiaMap = L.map('map', { zoomControl: true }).setView([22.5, 82.0], 4.5);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+      maxZoom: 18
+    }).addTo(indiaMap);
+
+    // ── Disaster zones: circle overlays ──────────────────────────────
+    const zones = [
+      // Flood zones
+      { lat: 26.14, lng: 91.74, radius: 60000, color: '#E24B4A', fill: '#E24B4A', label: '<div class="font-body-main"><b class="text-on-surface">Guwahati, Assam</b><br><span class="text-critical-red">🔴 Flood Critical — Brahmaputra overflowing</span><br>Evacuation in progress</div>' },
+      { lat: 26.50, lng: 93.00, radius: 80000, color: '#E24B4A', fill: '#E24B4A', label: '<div class="font-body-main"><b class="text-on-surface">Central Assam</b><br><span class="text-critical-red">🔴 Flood Inundation Zone</span><br>12 districts affected</div>' },
+      { lat: 10.16, lng: 76.64, radius: 50000, color: '#BA7517', fill: '#BA7517', label: '<div class="font-body-main"><b class="text-on-surface">Ernakulam, Kerala</b><br><span class="text-warning-amber">🟠 Heavy Rainfall — Periyar basin</span><br>IMD orange warning active</div>' },
+      { lat:  9.50, lng: 77.00, radius: 45000, color: '#BA7517', fill: '#BA7517', label: '<div class="font-body-main"><b class="text-on-surface">Southern Kerala</b><br><span class="text-warning-amber">🟠 High-rainfall corridor</span><br>Landslide risk: moderate</div>' },
+
+      // Cyclone zone
+      { lat: 22.30, lng: 69.50, radius: 100000, color: '#E24B4A', fill: '#E24B4A', label: '<div class="font-body-main"><b class="text-on-surface">Gujarat Coastline</b><br><span class="text-critical-red">🔴 Cyclone Landfall Warning</span><br>Evacuation belt active — 18:00 IST</div>' },
+
+      // Heatwave zones
+      { lat: 26.45, lng: 74.64, radius: 90000, color: '#BA7517', fill: '#BA7517', label: '<div class="font-body-main"><b class="text-on-surface">Rajasthan</b><br><span class="text-warning-amber">🟡 Heatwave Zone</span><br>Temp: 47°C — IMD red alert</div>' },
+      { lat: 26.85, lng: 80.91, radius: 85000, color: '#BA7517', fill: '#BA7517', label: '<div class="font-body-main"><b class="text-on-surface">Uttar Pradesh</b><br><span class="text-warning-amber">🟡 Heatwave Zone</span><br>Temp: 45°C — Heat stroke advisory</div>' },
+      { lat: 23.25, lng: 77.41, radius: 75000, color: '#BA7517', fill: '#BA7517', label: '<div class="font-body-main"><b class="text-on-surface">Madhya Pradesh</b><br><span class="text-warning-amber">🟡 Heatwave Zone</span><br>Temp: 44°C — Water scarcity alert</div>' },
+
+      // Landslide watch
+      { lat: 32.23, lng: 77.19, radius: 40000, color: '#5da9fe', fill: '#5da9fe', label: '<div class="font-body-main"><b class="text-on-surface">Manali–Leh Highway, Himachal</b><br><span class="text-secondary-container">🔵 Landslide Watch</span><br>BRO on standby — road passable</div>' },
+    ];
+
+    zones.forEach(z => {
+      L.circle([z.lat, z.lng], {
+        color: z.color,
+        fillColor: z.fill,
+        fillOpacity: 0.3,
+        weight: 1.5,
+        radius: z.radius
+      }).addTo(indiaMap).bindPopup(z.label, { maxWidth: 240, className: 'custom-popup' });
+    });
+
+    // ── Relief camp markers ───────────────────────────────────────────
+    const shelterIcon = L.divIcon({
+      html: '<div class="bg-primary-container text-white rounded-full w-[22px] h-[22px] flex items-center justify-center text-[11px] border-2 border-white shadow-md transition-transform hover:scale-110">⛺</div>',
+      iconSize: [22, 22], iconAnchor: [11, 11], className: ''
+    });
+
+    const shelters = [
+      { lat: 26.18, lng: 91.75, label: '<div class="font-body-main"><b class="text-on-surface">Guwahati Camp A</b><br><span class="text-outline text-[12px]">3,200 persons · Near full</span></div>' },
+      { lat: 10.05, lng: 76.35, label: '<div class="font-body-main"><b class="text-on-surface">Ernakulam Relief Centre</b><br><span class="text-outline text-[12px]">1,800 persons · Open</span></div>' },
+      { lat: 23.21, lng: 69.65, label: '<div class="font-body-main"><b class="text-on-surface">Bhuj Cyclone Shelter</b><br><span class="text-outline text-[12px]">4,100 persons · Full</span></div>' },
+      { lat: 19.81, lng: 85.83, label: '<div class="font-body-main"><b class="text-on-surface">Puri Relief Centre</b><br><span class="text-outline text-[12px]">900 persons · Open</span></div>' },
+      { lat: 31.96, lng: 77.10, label: '<div class="font-body-main"><b class="text-on-surface">Kullu Camp, Himachal</b><br><span class="text-outline text-[12px]">2,400 persons · Near full</span></div>' },
+    ];
+
+    shelters.forEach(s => {
+      L.marker([s.lat, s.lng], { icon: shelterIcon })
+        .addTo(indiaMap)
+        .bindPopup(s.label, { maxWidth: 200, className: 'custom-popup' });
+    });
+
+    // ── Legend ────────────────────────────────────────────────────────
+    const legend = L.control({ position: 'bottomleft' });
+    legend.onAdd = function() {
+      const div = L.DomUtil.create('div');
+      div.className = 'bg-white/95 backdrop-blur-sm p-2 rounded-lg text-[11px] leading-relaxed border border-border-subtle shadow-sm font-body-main dark-legend-fix';
+      div.innerHTML =
+        '<div class="font-semibold mb-1 text-on-surface">Map Legend</div>' +
+        '<div class="flex items-center gap-1.5"><span class="inline-block w-2.5 h-2.5 rounded-full bg-critical-red"></span>Flood / Cyclone</div>' +
+        '<div class="flex items-center gap-1.5"><span class="inline-block w-2.5 h-2.5 rounded-full bg-warning-amber"></span>Heatwave</div>' +
+        '<div class="flex items-center gap-1.5"><span class="inline-block w-2.5 h-2.5 rounded-full bg-secondary-container"></span>Landslide watch</div>' +
+        '<div class="flex items-center gap-1.5"><span class="inline-block w-3 h-3 text-center leading-3">⛺</span>Relief camp</div>';
+      return div;
+    };
+    legend.addTo(indiaMap);
+    
+    // Invalidate size to ensure it fills the container properly after render
+    setTimeout(() => {
+      indiaMap.invalidateSize();
+    }, 100);
+  }, 100);
+</script>
+<style>
+  /* Fix popup styling to match theme */
+  .leaflet-popup-content-wrapper {
+    border-radius: theme('borderRadius.lg');
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid theme('colors.border-subtle');
+  }
+  .leaflet-popup-content {
+    margin: 10px 12px;
+    line-height: </style></body></html>
