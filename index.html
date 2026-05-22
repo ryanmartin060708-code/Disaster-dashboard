@@ -637,18 +637,15 @@
   });
 </script>
 <script>
-  const OW_KEY = '1bd4925eeceb4385c9b3f06d5403fed0';
-  const CITY   = 'Mumbai';
+  const CITY = 'Mumbai';
 
   async function fetchWeather() {
     try {
-      const res  = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${CITY}&appid=${OW_KEY}&units=metric`
-      );
+      const res  = await fetch(`/api/weather?city=${encodeURIComponent(CITY)}`);
       const data = await res.json();
 
       if (data.cod !== 200) {
-        console.error('OpenWeather error:', data.message);
+        console.error('Weather error:', data.message);
         return;
       }
 
@@ -659,11 +656,9 @@
       document.getElementById('w-vis').textContent   = (data.visibility / 1000).toFixed(1) + ' km';
       document.getElementById('w-rain').textContent  = data.rain ? (data.rain['1h'] || 0) + ' mm' : '0 mm';
 
-      // Update card title to show city + live tag
       document.getElementById('weather-card-title').innerHTML =
         '<i class="ti ti-cloud text-sm animate-float"></i> Live weather · ' + data.name;
 
-      // Remove the "add API key" banner once data loads
       const banner = document.getElementById('weather-banner');
       if (banner) banner.remove();
 
