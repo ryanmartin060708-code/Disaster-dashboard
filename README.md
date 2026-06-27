@@ -8,7 +8,7 @@ A live disaster monitoring dashboard for India built with vanilla HTML, CSS, and
 
 ## 🔴 Live Demo
 
-👉 **[View Live Dashboard](https://india-disaster-dashboard.vercel.app)**
+👉 **[View Live Dashboard](https://disaster-dashboard-psi.vercel.app)**
 
 ---
 
