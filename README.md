@@ -53,7 +53,7 @@ A live disaster monitoring dashboard for India built with vanilla HTML, CSS, and
 No build step or package manager needed. Just clone and open:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/india-disaster-dashboard.git
+git clone https://github.com/ryanmartin060708-code/india-disaster-dashboard.git
 cd india-disaster-dashboard
 open index.html
 ```
